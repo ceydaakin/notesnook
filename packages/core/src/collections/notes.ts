@@ -19,11 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { getId } from "../utils/id.js";
 import { getContentFromData } from "../content-types/index.js";
-import {
-  HEADLINE_REGEX,
-  NEWLINE_STRIP_REGEX,
-  formatTitle
-} from "../utils/title-format.js";
+import { NEWLINE_STRIP_REGEX, formatTitle } from "../utils/title-format.js";
 import { clone } from "../utils/clone.js";
 import { EMPTY_CONTENT } from "./content.js";
 import { buildFromTemplate } from "../utils/templates/index.js";
@@ -146,7 +142,7 @@ export class Notes implements ICollection {
       const currentNoteTitleFields = await this.db
         .sql()
         .selectFrom("notes")
-        .select(["isGeneratedTitle", "title"])
+        .select(["isGeneratedTitle", "title", "dateCreated"])
         .where("id", "=", id)
         .executeTakeFirst();
       if (isUpdating) {
@@ -155,13 +151,25 @@ export class Notes implements ICollection {
           Boolean(currentNoteTitleFields?.isGeneratedTitle) &&
           !didUserEditTitle;
         const titleFormat = this.db.settings.getTitleFormat();
-        if (
+        const generatedTitle =
           item.isGeneratedTitle &&
           titleFormat.includes("$headline$") &&
-          headlineTitle &&
-          currentNoteTitleFields?.title !== headlineTitle
+          headlineTitle
+            ? formatTitle(
+                titleFormat,
+                this.db.settings.getDateFormat(),
+                this.db.settings.getTimeFormat(),
+                this.db.settings.getDayFormat(),
+                headlineTitle,
+                this.totalNotes - 1,
+                currentNoteTitleFields?.dateCreated ?? undefined
+              )
+            : undefined;
+        if (
+          generatedTitle &&
+          currentNoteTitleFields?.title !== generatedTitle
         ) {
-          item.title = titleFormat.replace(HEADLINE_REGEX, headlineTitle);
+          item.title = generatedTitle;
         } else if (item.title === "")
           item.title = currentNoteTitleFields?.title || "Untitled";
       }

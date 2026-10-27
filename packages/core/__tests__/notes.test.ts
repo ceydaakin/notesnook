@@ -210,6 +210,23 @@ test("note title with headline format should update on every headline change", (
     }
   }));
 
+test("note title with headline format should keep other title format variables on headline change", () =>
+  noteTest().then(async ({ db }) => {
+    await db.settings.setTitleFormat("$day$ $headline$");
+    const id = await db.notes.add({
+      content: { type: TEST_NOTE.content.type, data: "<p>a</p>" }
+    });
+    const note = await db.notes.note(id);
+    const day = note?.title.replace(/ a$/, "");
+    expect(day).not.toContain("$");
+
+    await db.notes.add({
+      id,
+      content: { type: TEST_NOTE.content.type, data: "<p>ab</p>" }
+    });
+    expect((await db.notes.note(id))?.title).toBe(`${day} ab`);
+  }));
+
 [
   ["simple p tag", "<p>headline</p>", "headline"],
   ["across multiple tags", "<h1>title</h1><ol><li>list</li></ol>", "title"],

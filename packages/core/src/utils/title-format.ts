@@ -37,21 +37,22 @@ export function formatTitle(
   timeFormat: TimeFormat,
   dayFormat: DayFormat,
   headline = "",
-  totalNotes = 0
+  totalNotes = 0,
+  now = Date.now()
 ) {
-  const date = formatDate(Date.now(), {
+  const date = formatDate(now, {
     dateFormat,
     type: "date"
   });
 
-  const time = formatDate(Date.now(), {
+  const time = formatDate(now, {
     timeFormat,
     type: "time"
   });
-  const timezone = formatDate(Date.now(), {
+  const timezone = formatDate(now, {
     type: "timezone"
   });
-  const day = formatDate(Date.now(), {
+  const day = formatDate(now, {
     dayFormat,
     type: "day"
   });
